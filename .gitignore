@@ -1,0 +1,5 @@
+edge_err.log
+edge_out.log
+test_err.html
+test_res.txt
+*.log

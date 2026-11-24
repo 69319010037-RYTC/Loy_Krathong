@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>เทศกาลวันลอยกระทง 3D - Loy Krathong 3D Festival</title>
+  
+  <!-- Thai & Modern Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="style.css">
+  
+  <!-- Local Three.js & OrbitControls for Fast Offline Execution -->
+  <script src="three.min.js"></script>
+  <script src="OrbitControls.js"></script>
+</head>
+<body>
+  <!-- 3D WebGL Canvas -->
+  <canvas id="webgl-canvas"></canvas>
+
+  <!-- Clean Cinema Mode Exit Indicator -->
+  <div id="cinema-exit-hint" data-i18n="cinemaHint">🎬 โหมด Cinema: แตะหน้าจอ หรือกด ESC เพื่อแสดงเมนู</div>
+
+  <!-- UI Overlay Container -->
+  <div id="ui-container">
+    
+    <!-- Top Header Banner -->
+    <header class="app-header interactive-element">
+      <div class="app-logo">🪷</div>
+      <div class="header-text">
+        <h1 data-i18n="appTitle">เทศกาลวันลอยกระทง 3D</h1>
+        <p data-i18n="appSubtitle">Midnight Lantern River & งานวัดย้อนยุคริมน้ำ (ประชากร 80 คน)</p>
+      </div>
+    </header>
+
+    <!-- Top Right Action Controls -->
+    <div class="top-action-bar interactive-element">
+      <!-- Bilingual Switcher Toggle -->
+      <button id="lang-toggle-btn" class="glow-btn" title="Switch Language / สลับภาษา">
+        EN
+      </button>
+
+      <!-- Festival Legend Info Button -->
+      <button id="info-btn" class="glow-btn" title="Festival Legend">
+        📖 <span class="btn-text" data-i18n="infoBtn">ประวัติวันลอยกระทง</span>
+      </button>
+
+      <!-- Sound Mixer Drawer Toggle -->
+      <button id="sound-toggle-btn" class="glow-btn" title="Sound Mixer">
+        🎵 <span class="btn-text" data-i18n="audioMixer">เครื่องผสมเสียง</span>
+      </button>
+
+      <!-- Clean Cinema Mode Toggle -->
+      <button id="cinema-btn" class="glow-btn" title="Clean Cinema Mode">
+        🎬 <span class="btn-text" data-i18n="cinemaMode">ซ่อน UI (Cinema)</span>
+      </button>
+
+      <!-- Make Krathong Primary Action -->
+      <button id="create-krathong-btn" class="glow-btn primary" title="Design Krathong">
+        ✨ <span class="btn-text" data-i18n="createKrathong">ทำกระทง & ขอพร</span>
+      </button>
+    </div>
+
+    <!-- Right Quick Action Triggers -->
+    <div class="quick-triggers interactive-element">
+      <button id="fireworks-btn" class="trigger-btn" title="Launch Fireworks">
+        <span class="icon">🎆</span>
+        <span class="trigger-text" data-i18n="launchFireworks">จุดพลุฉลอง</span>
+      </button>
+      <button id="lantern-btn" class="trigger-btn" title="Release Sky Lantern">
+        <span class="icon">🏮</span>
+        <span class="trigger-text" data-i18n="releaseLantern">ปล่อยโคมลอย</span>
+      </button>
+    </div>
+
+    <!-- Bottom Center Zone Navigation -->
+    <nav class="zone-navigation interactive-element">
+      <button class="zone-btn active" data-zone="river" data-i18n="zoneRiver">🌊 ท่าน้ำลอยกระทง</button>
+      <button class="zone-btn" data-zone="market" data-i18n="zoneMarket">🍢 ตลาดน้ำ & สตรีทฟู้ด</button>
+      <button class="zone-btn" data-zone="stage" data-i18n="zoneStage">🎭 เวทีศิลปวัฒนธรรม</button>
+      <button class="zone-btn" data-zone="games" data-i18n="zoneGames">🎯 ซุ้มเกมงานวัด</button>
+      <button class="zone-btn" data-zone="merit" data-i18n="zoneMerit">🪷 โซนทำบุญไหว้พระ</button>
+      <button class="zone-btn" data-zone="panorama" data-i18n="zonePanorama">🌕 วิวมุมสูงพานอรามา</button>
+    </nav>
+
+    <!-- Sound Mixer Drawer -->
+    <div id="sound-mixer-drawer" class="modal-drawer interactive-element">
+      <div class="drawer-header">
+        <h3 data-i18n="mixerTitle">🎛️ Sound Mixer บรรยากาศ</h3>
+        <button id="close-mixer-btn" class="close-btn">&times;</button>
+      </div>
+
+      <div class="sound-layer">
+        <div class="sound-info">
+          <span data-i18n="layerWater">🌊 เสียงระลอกคลื่นแม่น้ำ</span>
+        </div>
+        <input type="range" id="slider-water" class="sound-slider" min="0" max="1" step="0.05" value="0.65">
+      </div>
+
+      <div class="sound-layer">
+        <div class="sound-info">
+          <span data-i18n="layerMusic">🎶 ดนตรีไทย & เพลงลอยกระทง</span>
+        </div>
+        <input type="range" id="slider-music" class="sound-slider" min="0" max="1" step="0.05" value="0.70">
+      </div>
+
+      <div class="sound-layer">
+        <div class="sound-info">
+          <span data-i18n="layerFair">🏮 บรรยากาศงานวัด & ผู้คน</span>
+        </div>
+        <input type="range" id="slider-fair" class="sound-slider" min="0" max="1" step="0.05" value="0.50">
+      </div>
+
+      <div class="sound-layer">
+        <div class="sound-info">
+          <span data-i18n="layerFx">🎆 เสียงพลุและสะเก็ดไฟ</span>
+        </div>
+        <input type="range" id="slider-fx" class="sound-slider" min="0" max="1" step="0.05" value="0.85">
+      </div>
+
+      <button id="master-audio-btn" class="master-audio-btn" data-i18n="audioStartPrompt">
+        คลิกเพื่อเปิดเสียงดนตรีสดและบรรยากาศ
+      </button>
+    </div>
+
+  </div> <!-- End UI Container -->
+
+  <!-- Krathong Studio Center Modal -->
+  <div id="krathong-modal" class="center-modal-overlay">
+    <div class="krathong-studio-card">
+      <div class="studio-title">
+        <h2 data-i18n="studioTitle">🪷 ออกแบบกระทงและเขียนคำขอพร</h2>
+        <button id="close-studio-btn" class="close-btn">&times;</button>
+      </div>
+
+      <!-- 1. Base -->
+      <div class="option-group">
+        <label data-i18n="baseLabel">1. เลือกฐานกระทง:</label>
+        <div class="choice-pills">
+          <div class="choice-pill selected" data-opt="base" data-val="banana" data-i18n="baseBanana">หยวกกล้วยแท้</div>
+          <div class="choice-pill" data-opt="base" data-val="bread" data-i18n="baseBread">ขนมปังรักษ์โลก</div>
+          <div class="choice-pill" data-opt="base" data-val="ice" data-i18n="baseIce">กระทงน้ำแข็ง</div>
+        </div>
+      </div>
+
+      <!-- 2. Petals -->
+      <div class="option-group">
+        <label data-i18n="petalLabel">2. วิจิตรกรรมกลีบใบตอง:</label>
+        <div class="choice-pills">
+          <div class="choice-pill selected" data-opt="petal" data-val="lotus" data-i18n="petalLotus">กลีบผกาบงกช</div>
+          <div class="choice-pill" data-opt="petal" data-val="pink" data-i18n="petalPink">กลีบบัวหลวงสีชมพู</div>
+          <div class="choice-pill" data-opt="petal" data-val="pandan" data-i18n="petalPandan">กลีบใบเตยมรกต</div>
+        </div>
+      </div>
+
+      <!-- 3. Flowers -->
+      <div class="option-group">
+        <label data-i18n="flowerLabel">3. ดอกไม้มงคลบูชา:</label>
+        <div class="choice-pills">
+          <div class="choice-pill selected" data-opt="flower" data-val="marigold" data-i18n="flowerMarigold">ดอกดาวเรืองทอง</div>
+          <div class="choice-pill" data-opt="flower" data-val="lotus" data-i18n="flowerLotus">ดอกบัวหลวงขาว</div>
+          <div class="choice-pill" data-opt="flower" data-val="orchid" data-i18n="flowerOrchid">ดอกกล้วยไม้ม่วง</div>
+        </div>
+      </div>
+
+      <!-- 4. Candle & Incense -->
+      <div class="option-group">
+        <label data-i18n="candleLabel">4. แสงเทียนและธูป:</label>
+        <div class="choice-pills">
+          <div class="choice-pill selected" data-opt="candleType" data-val="warm" data-i18n="candleWarm">เทียนไขสีนวล</div>
+          <div class="choice-pill" data-opt="candleType" data-val="gold" data-i18n="candleGold">เทียนทองอร่าม</div>
+        </div>
+      </div>
+
+      <!-- Wish Text Input -->
+      <div class="option-group">
+        <textarea id="wish-input" class="wish-input-box" rows="2" data-i18n-placeholder="wishPlaceholder" placeholder="พิมพ์คำอธิษฐานขอขมาพระแม่คงคา และขอพรเสริมมงคลชีวิตที่นี่..."></textarea>
+      </div>
+
+      <button id="launch-krathong-action-btn" class="launch-krathong-btn" data-i18n="launchBtn">
+        ✨ อธิษฐานและปล่อยกระทงลงแม่น้ำ
+      </button>
+    </div>
+  </div>
+
+  <!-- Legend & Information Center Modal -->
+  <div id="info-modal" class="center-modal-overlay">
+    <div class="info-card">
+      <h2 data-i18n="infoTitle">🌕 สืบสานประเพณีวันลอยกระทง</h2>
+      <p data-i18n="infoP1">วันลอยกระทงตรงกับวันเพ็ญขึ้น ๑๕ ค่ำ เดือน ๑๒ คืนที่พระจันทร์เต็มดวงสว่างไสวที่สุดในรอบปี เป็นประเพณีที่สืบทอดกันมายาวนานเพื่อแสดงความกตัญญูกตเวทิตา และขอขมาต่อ 'พระแม่คงคา' ผู้หล่อเลี้ยงสรรพชีวิต</p>
+      
+      <p><strong data-i18n="infoHighlights">จุดเด่นและกิจกรรมในงานจำลอง 3D นี้:</strong></p>
+      <ul>
+        <li data-i18n="infoPoint1">แม่น้ำสายแสง (Midnight Lantern River): คลื่นน้ำสะท้อนแสงจันทร์และกระทงระยิบระยับ</li>
+        <li data-i18n="infoPoint2">ตลาดน้ำย้อนยุค: รวมอาหารและขนมไทยมงคล เช่น ขนมครก, ข้าวเกรียบปากหม้อ, ลูกชุบ, สายไหม, น้ำสมุนไพร</li>
+        <li data-i18n="infoPoint3">การแสดงวัฒนธรรม 4 ภาค: รำวงมาตรฐาน รำอวยพร และดนตรีไทยสด</li>
+        <li data-i18n="infoPoint4">ซุ้มเกมงานวัด & ทำบุญ: ปาโป่ง, โยนห่วง, ตักไข่, สอยดาว, หยอดเหรียญพระประจำวันเกิด 8 ปาง และปิดทองลูกนิมิต</li>
+        <li data-i18n="infoPoint5">ประชากรตัวละคร Low-Poly 80 คน: ทั้งเด็ก นักเรียน ผู้ใหญ่ และคนชรา ดำเนินกิจกรรมร่วมกันอย่างอบอุ่น</li>
+      </ul>
+
+      <button id="close-info-btn" class="glow-btn" style="margin-top: 18px; width: 100%; justify-content: center;" data-i18n="closeBtn">
+        ปิดหน้าต่าง
+      </button>
+    </div>
+  </div>
+
+  <!-- Main ES Module Script -->
+  <script type="module" src="main.js"></script>
+</body>
+</html>
